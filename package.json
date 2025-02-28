@@ -1,0 +1,19 @@
+{
+  "name": "chrome_tab_extension",
+  "version": "1.0.1",
+  "scripts": {
+    "build": "zip -r ../build/extension.zip *", 
+    "lint": "eslint . --ext .js", 
+    "test": "jest --watchAll", 
+    "start": "webpack --mode development --watch"
+  },
+  "devDependencies": {
+    "eslint": "^8.56.0",
+    "jest": "^29.7.0",
+    "webpack": "^5.89.0",
+    "webpack-cli": "^5.1.4"
+  },
+  "keywords": ["chrome extension", "tab groups", "productivity"],
+  "author": "Abhinav Sachdeva <abhinav.sachdeva9@gmail.com>",
+  "license": "ISC"
+}
