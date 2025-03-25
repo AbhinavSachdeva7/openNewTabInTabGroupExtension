@@ -3,8 +3,12 @@
   "name": "Tab Group Opener",
   "version": "1.0.1",
   "description": "Directly open tabs in a new or existing tab group from the context menu",
-  "permissions": ["contextMenus", "tabs", "tabGroups"],
-  "host_permissions": ["<all_urls>"],
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "permissions": ["contextMenus", "tabs", "tabGroups", "storage"],
   "background": {
     "service_worker": "background.js"
   },
