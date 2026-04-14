@@ -60,8 +60,8 @@ async function createTabInNewGroup(info) {
     throw new Error("Failed to create new group");
   }
 
-  log("createTabInNewGroup Works"); //this works
-  return newTab;
+  log("createTabInNewGroup Works");
+  return updatedTab;
 }
 
 // function for handling tab creation in existing group
@@ -201,6 +201,7 @@ async function handleContextMenuClick(info, tab) {
       if (info.menuItemId === MENU_NEW_GROUP_ID) {
         log("newGroup Works");
         newTab = await createTabInNewGroup(info);
+        await saveLastUsedGroup(newTab.groupId);
       } else if (info.menuItemId.startsWith(MENU_GROUP_PREFIX)) {
         log("createTabInExistingGroup Works");
         const targetGroupId = parseInt(
