@@ -349,15 +349,23 @@ async function checkPermissions() {
 // ==========================================
 
 /**
- * Initializes the extension's context menu structure on installation
+ * Initializes the extension's context menu structure
  */
-chrome.runtime.onInstalled.addListener(async () => {
+async function initializeMenu() {
   if (!(await checkPermissions())) {
     error("Required permissions not granted");
     return;
   }
-  await updateTabGroupMenuItems("onInstalled");
-});
+  await updateTabGroupMenuItems("initializeMenu");
+}
+
+/**
+ * Initializes the extension's context menu structure on installation
+ */
+chrome.runtime.onInstalled.addListener(initializeMenu);
+
+// Reinitialize menu on Chrome startup to prevent stale menu items
+chrome.runtime.onStartup.addListener(initializeMenu);
 
 // Clean up when extension is suspended
 chrome.runtime.onSuspend.addListener(() => {
