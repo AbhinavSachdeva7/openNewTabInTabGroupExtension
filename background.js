@@ -133,13 +133,13 @@ async function updateTabGroupMenuItems(functionName) {
 
     await chrome.contextMenus.removeAll();
 
-    chrome.contextMenus.create({
+    await chrome.contextMenus.create({
       id: MENU_PARENT_ID,
       title: "Open in Tab Group",
       contexts: ["link"],
     });
 
-    chrome.contextMenus.create({
+    await chrome.contextMenus.create({
       id: MENU_NEW_GROUP_ID,
       parentId: MENU_PARENT_ID,
       title: "New Group...",
@@ -166,7 +166,7 @@ async function updateTabGroupMenuItems(functionName) {
           ? `★ ${group.title || `Unnamed Group (${group.color})`}`
           : group.title || `Unnamed Group (${group.color})`;
 
-      chrome.contextMenus.create({
+      await chrome.contextMenus.create({
         id: `${MENU_GROUP_PREFIX}${group.id}`,
         parentId: MENU_PARENT_ID,
         title: title,
@@ -350,7 +350,6 @@ async function checkPermissions() {
 
 /**
  * Initializes the extension's context menu structure on installation
- * Creates the parent menu and "New Group" submenu items
  */
 chrome.runtime.onInstalled.addListener(async () => {
   if (!(await checkPermissions())) {
