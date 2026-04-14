@@ -236,7 +236,7 @@ async function handleContextMenuClick(info, tab) {
 async function saveLastUsedGroup(groupId) {
   try {
     // Just set the new value, no need to clear
-    await chrome.storage.local.set({ lastUsedGroupId: groupId });
+    await chrome.storage.session.set({ lastUsedGroupId: groupId });
     lastUsedGroupId = groupId; // Update the in-memory value
     log("Saved last used group:", groupId);
 
@@ -253,7 +253,7 @@ async function saveLastUsedGroup(groupId) {
  */
 async function loadLastUsedGroup() {
   try {
-    const data = await chrome.storage.local.get("lastUsedGroupId");
+    const data = await chrome.storage.session.get("lastUsedGroupId");
     lastUsedGroupId = data.lastUsedGroupId || null;
     log("Loaded last used group:", lastUsedGroupId);
     return lastUsedGroupId;
