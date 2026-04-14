@@ -100,7 +100,7 @@ async function createTabInExistingGroup(info, tab, targetGroupId) {
   }
 
   log("createTabInExistingGroup Works");
-  return newTab;
+  return updatedTab;
 }
 
 // function for cleaning up orphaned tabs
