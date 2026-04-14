@@ -27,17 +27,17 @@ let isUpdating = false; // Add mutex lock at the top
 
 //  function for getting all groups across all windows
 async function getAllTabGroups() {
-  const windows = await chrome.windows.getAll({
-    populate: true,
-  });
-  const allGroups = [];
-
-  for (const window of windows) {
-    const groups = await chrome.tabGroups.query({ windowId: window.id });
-    allGroups.push(...groups);
-  }
-  log("getAllTabGroups Works");
-  return allGroups;
+  const tabs = await chrome.tabs.query({});
+  const groupIds = [
+    ...new Set(tabs.map((t) => t.groupId).filter((id) => id !== -1)),
+  ];
+  if (groupIds.length === 0) return [];
+  const results = await Promise.allSettled(
+    groupIds.map((id) => chrome.tabGroups.get(id))
+  );
+  return results
+    .filter((r) => r.status === "fulfilled")
+    .map((r) => r.value);
 }
 //  function for handling tab creation in a new group
 async function createTabInNewGroup(info) {
