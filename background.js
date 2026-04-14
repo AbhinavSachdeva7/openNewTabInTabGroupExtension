@@ -17,7 +17,6 @@ const debouncedUpdateTabGroupList = debounce(
 // ==========================================
 // GLOBAL VARIABLES
 // ==========================================
-let menuItems = [];
 let lastUsedGroupId = null; // Track the last used group ID
 let isUpdating = false; // Add mutex lock at the top
 
@@ -120,19 +119,7 @@ async function cleanupOrphanedTab(newTab) {
 // MENU MANAGEMENT
 // ==========================================
 
-/**
- * Creates a context menu item and tracks it in the menuItems array
- * @param {Object} options - Menu item creation options
- * @returns {string} The created menu item's ID
- */
-function createMenuItem(options) {
-  const id = chrome.contextMenus.create(options);
-  menuItems.push({ id, parentId: options.parentId });
-  return id;
-}
-
 // Function to update menu items based on current tab groups
-// Modify updateTabGroupMenuItems function
 async function updateTabGroupMenuItems(functionName) {
   log(isUpdating, "entry", functionName);
   if (isUpdating) {
@@ -144,29 +131,27 @@ async function updateTabGroupMenuItems(functionName) {
     isUpdating = true;
     log("entry in function through", functionName);
 
-    // Create a set of items to remove
-    const itemsToRemove = menuItems.filter(
-      (menu) =>
-        menu.parentId === MENU_PARENT_ID && menu.id !== MENU_NEW_GROUP_ID
-    );
+    await chrome.contextMenus.removeAll();
 
-    for (const menu of itemsToRemove) {
-      try {
-        await chrome.contextMenus.remove(menu.id);
-        menuItems = menuItems.filter((item) => item.id !== menu.id);
-      } catch (e) {
-        log(`Menu item ${menu.id} removal failed:`, e.message);
-      }
-    }
+    chrome.contextMenus.create({
+      id: MENU_PARENT_ID,
+      title: "Open in Tab Group",
+      contexts: ["link"],
+    });
 
-    const groups = await getAllTabGroups();
+    chrome.contextMenus.create({
+      id: MENU_NEW_GROUP_ID,
+      parentId: MENU_PARENT_ID,
+      title: "New Group...",
+      contexts: ["link"],
+    });
 
-    // Load the last used group if we haven't already
     if (lastUsedGroupId === null) {
       await loadLastUsedGroup();
     }
 
-    // Sort groups to put the last used one first
+    const groups = await getAllTabGroups();
+
     if (lastUsedGroupId !== null) {
       groups.sort((a, b) => {
         if (a.id === lastUsedGroupId) return -1;
@@ -175,22 +160,20 @@ async function updateTabGroupMenuItems(functionName) {
       });
     }
 
-    const createPromises = groups.map((group) => {
-      // Add a star to the last used group
+    for (const group of groups) {
       const title =
         group.id === lastUsedGroupId
           ? `★ ${group.title || `Unnamed Group (${group.color})`}`
           : group.title || `Unnamed Group (${group.color})`;
 
-      return createMenuItem({
+      chrome.contextMenus.create({
         id: `${MENU_GROUP_PREFIX}${group.id}`,
         parentId: MENU_PARENT_ID,
         title: title,
         contexts: ["link"],
       });
-    });
+    }
 
-    await Promise.all(createPromises);
     log("Menu update completed");
   } catch (err) {
     error("Error updating tab group menu items:", err, functionName);
@@ -372,28 +355,8 @@ async function checkPermissions() {
 chrome.runtime.onInstalled.addListener(async () => {
   if (!(await checkPermissions())) {
     error("Required permissions not granted");
-    return; // Exit the function if permissions are not granted
+    return;
   }
-
-  await new Promise((resolve) => chrome.contextMenus.removeAll(resolve));
-
-  // Create parent menu item
-  var id = createMenuItem({
-    id: MENU_PARENT_ID,
-    title: "Open in Tab Group",
-    contexts: ["link"],
-  });
-  menuItems.push(id);
-
-  // Create "New Group" submenu item
-  var id1 = createMenuItem({
-    id: MENU_NEW_GROUP_ID,
-    parentId: MENU_PARENT_ID,
-    title: "New Group...",
-    contexts: ["link"],
-  });
-  menuItems.push(id1);
-
   await updateTabGroupMenuItems("onInstalled");
 });
 
