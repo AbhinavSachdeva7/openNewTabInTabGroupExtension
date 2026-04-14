@@ -1,7 +1,7 @@
+import { debounce, log, warn, error } from "./utility.js";
 // ==========================================
 // CONFIGURATION CONSTANTS
 // ==========================================
-const DEBUG = false; // Set to true for development, false for production
 const DEBOUNCE_DELAY = 500; // Delay in ms for debounced functions
 const MENU_PARENT_ID = "openInGroup"; // ID for the parent context menu
 const MENU_NEW_GROUP_ID = "newGroup"; // ID for the "New Group" menu item
@@ -14,8 +14,6 @@ const debouncedUpdateTabGroupList = debounce(
   DEBOUNCE_DELAY
 );
 
-
-
 // ==========================================
 // GLOBAL VARIABLES
 // ==========================================
@@ -23,15 +21,15 @@ let menuItems = [];
 let lastUsedGroupId = null; // Track the last used group ID
 let isUpdating = false; // Add mutex lock at the top
 
-
-
 // ==========================================
 // CORE TAB GROUP FUNCTIONS
 // ==========================================
 
 //  function for getting all groups across all windows
 async function getAllTabGroups() {
-  const windows = await chrome.windows.getAll({ populate: true });
+  const windows = await chrome.windows.getAll({
+    populate: true,
+  });
   const allGroups = [];
 
   for (const window of windows) {
@@ -118,8 +116,6 @@ async function cleanupOrphanedTab(newTab) {
   }
 }
 
-
-
 // ==========================================
 // MENU MANAGEMENT
 // ==========================================
@@ -196,8 +192,8 @@ async function updateTabGroupMenuItems(functionName) {
 
     await Promise.all(createPromises);
     log("Menu update completed");
-  } catch (error) {
-    error("Error updating tab group menu items:", error, functionName);
+  } catch (err) {
+    error("Error updating tab group menu items:", err, functionName);
   } finally {
     log(isUpdating, "exit");
     isUpdating = false;
@@ -210,7 +206,7 @@ async function handleContextMenuClick(info, tab) {
     error("Invalid context menu information");
     return;
   }
-  
+
   if (!tab || !tab.windowId) {
     error("Tab information is undefined or invalid.");
     return;
@@ -224,14 +220,16 @@ async function handleContextMenuClick(info, tab) {
         newTab = await createTabInNewGroup(info);
       } else if (info.menuItemId.startsWith(MENU_GROUP_PREFIX)) {
         log("createTabInExistingGroup Works");
-        const targetGroupId = parseInt(info.menuItemId.replace(MENU_GROUP_PREFIX, ""));
-        
+        const targetGroupId = parseInt(
+          info.menuItemId.replace(MENU_GROUP_PREFIX, "")
+        );
+
         if (isNaN(targetGroupId)) {
           throw new Error("Invalid group ID format");
         }
-        
+
         newTab = await createTabInExistingGroup(info, tab, targetGroupId);
-        
+
         // Move saveLastUsedGroup after successful tab creation
         await saveLastUsedGroup(targetGroupId);
       } else {
@@ -244,8 +242,6 @@ async function handleContextMenuClick(info, tab) {
     }
   }
 }
-
-
 
 // ==========================================
 // STORAGE MANAGEMENT
@@ -260,7 +256,7 @@ async function saveLastUsedGroup(groupId) {
     await chrome.storage.local.set({ lastUsedGroupId: groupId });
     lastUsedGroupId = groupId; // Update the in-memory value
     log("Saved last used group:", groupId);
-    
+
     // Update the menu immediately to reflect the change
     await updateTabGroupMenuItems("lastUsedGroupUpdate");
   } catch (err) {
@@ -283,9 +279,6 @@ async function loadLastUsedGroup() {
     return null;
   }
 }
-
-
-
 
 // ==========================================
 // EVENT HANDLERS
@@ -322,13 +315,13 @@ function registerEventListeners() {
     warn("Event listeners already registered, skipping");
     return;
   }
-  
+
   chrome.tabGroups.onCreated.addListener(eventListeners.tabGroupsCreated);
   chrome.tabGroups.onRemoved.addListener(eventListeners.tabGroupsRemoved);
   chrome.tabGroups.onUpdated.addListener(eventListeners.tabGroupsUpdated);
   chrome.contextMenus.onClicked.addListener(eventListeners.contextMenuClicked);
   chrome.contextMenus.onClicked.addListener(eventListeners.handleContextMenu);
-  
+
   listenersRegistered = true;
   log("Event listeners registered");
 }
@@ -346,62 +339,6 @@ function removeEventListeners() {
     eventListeners.handleContextMenu
   );
 }
-
-
-
-
-// ==========================================
-// UTILITY FUNCTIONS
-// ==========================================
-/**
- * Logs messages to console when in debug mode
- */
-function log(...args) {
-  if (DEBUG) {
-    console.log(...args);
-  }
-}
-
-/**
- * Logs warning messages to console when in debug mode
- */
-function warn(...args) {
-  if (DEBUG) {
-    console.warn(...args);
-  }
-}
-
-/**
- * Logs error messages to console with different detail levels based on mode
- */
-function error(...args) {
-  // Always log errors, but with different detail levels
-  if (DEBUG) {
-    console.error(...args);
-  } else if (args.length > 0) {
-    // In production, only log the error message without stack traces
-    console.error(
-      typeof args[0] === "object" && args[0].message ? args[0].message : args[0]
-    );
-  }
-}
-
-/**
- * Creates a debounced version of a function
- * @param {Function} func - Function to debounce
- * @param {number} delay - Delay in milliseconds
- * @returns {Function} Debounced function
- */
-function debounce(func, delay) {
-  let timeoutId;
-  return function (...args) {
-    clearTimeout(timeoutId);
-    timeoutId = setTimeout(() => func.apply(this, args), delay);
-  };
-}
-
-
-
 
 // ==========================================
 // PERMISSION HANDLING
@@ -423,9 +360,6 @@ async function checkPermissions() {
     return false;
   }
 }
-
-
-
 
 // ==========================================
 // INITIALIZATION
@@ -469,9 +403,6 @@ chrome.runtime.onSuspend.addListener(() => {
   removeEventListeners();
   chrome.contextMenus.removeAll();
 });
-
-
-
 
 // Register listeners when the script loads
 registerEventListeners();
