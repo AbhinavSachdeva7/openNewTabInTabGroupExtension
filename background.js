@@ -281,9 +281,10 @@ const eventListeners = {
     log("onUpdated");
     debouncedUpdateTabGroupList("onUpdated");
   },
-  contextMenuClicked: () => {
+  contextMenuShown: async () => {
     log("Context menu shown");
-    debouncedUpdateTabGroupList("onClicked");
+    await updateTabGroupMenuItems("onShown");
+    chrome.contextMenus.refresh();
   },
   handleContextMenu: handleContextMenuClick,
 };
@@ -302,7 +303,7 @@ function registerEventListeners() {
   chrome.tabGroups.onCreated.addListener(eventListeners.tabGroupsCreated);
   chrome.tabGroups.onRemoved.addListener(eventListeners.tabGroupsRemoved);
   chrome.tabGroups.onUpdated.addListener(eventListeners.tabGroupsUpdated);
-  chrome.contextMenus.onClicked.addListener(eventListeners.contextMenuClicked);
+  chrome.contextMenus.onShown.addListener(eventListeners.contextMenuShown);
   chrome.contextMenus.onClicked.addListener(eventListeners.handleContextMenu);
 
   listenersRegistered = true;
@@ -315,12 +316,8 @@ function removeEventListeners() {
   chrome.tabGroups.onCreated.removeListener(eventListeners.tabGroupsCreated);
   chrome.tabGroups.onRemoved.removeListener(eventListeners.tabGroupsRemoved);
   chrome.tabGroups.onUpdated.removeListener(eventListeners.tabGroupsUpdated);
-  chrome.contextMenus.onClicked.removeListener(
-    eventListeners.contextMenuClicked
-  );
-  chrome.contextMenus.onClicked.removeListener(
-    eventListeners.handleContextMenu
-  );
+  chrome.contextMenus.onShown.removeListener(eventListeners.contextMenuShown);
+  chrome.contextMenus.onClicked.removeListener(eventListeners.handleContextMenu);
 }
 
 // ==========================================
